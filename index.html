@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0b6b55"><title>Bihar Weather Live</title>
+<link rel="manifest" href="manifest.json">
+<style>
+:root{font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;color:#102a26;background:#edf5f1}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(160deg,#eaf7f1,#f7faf9);min-height:100vh}
+header{background:#075e4d;color:white;padding:24px max(18px,calc((100% - 1050px)/2));display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.brand{font-size:1.3rem;font-weight:850;letter-spacing:-.04em}.sub{font-size:.86rem;opacity:.82;margin-top:4px}
+main{max-width:1050px;margin:22px auto;padding:0 16px 42px}.controls{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+select,button{font:inherit;border:1px solid #c9ded5;border-radius:12px;padding:12px 14px;background:white;color:#173d34}
+select{flex:1;min-width:220px}button{cursor:pointer;font-weight:700}button.primary{background:#087e65;color:white;border-color:#087e65}
+.panel{background:white;border:1px solid #dce9e3;border-radius:20px;padding:20px;box-shadow:0 8px 26px #124a3510}
+.hero{display:grid;grid-template-columns:1.2fr .8fr;gap:16px}.muted{color:#648077}.temp{font-size:4rem;font-weight:850;letter-spacing:-.07em;line-height:1.1;margin:12px 0}.condition{font-size:1.15rem;font-weight:700}.place{font-size:1.45rem;font-weight:800}.updated{font-size:.85rem;color:#648077;margin-top:10px}
+.metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}.metric{background:#f1f8f4;border-radius:14px;padding:14px}.metric span{display:block;color:#648077;font-size:.85rem}.metric b{display:block;font-size:1.25rem;margin-top:5px}
+.section-title{font-size:1.15rem;font-weight:800;margin:24px 0 12px}.forecast{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}.day{padding:14px 8px;text-align:center;background:white;border:1px solid #dce9e3;border-radius:15px}.day .icon{font-size:1.5rem;margin:8px 0}.day b{display:block}.day small{display:block;color:#648077;margin-top:6px}
+.alert{border-radius:14px;padding:14px 16px;margin-bottom:9px;background:#fff8e7;border:1px solid #f0dfac;color:#654a0c}.alert.info{background:#edf7ff;border-color:#cfe5f5;color:#1c5274}.error{color:#9d342b;background:#fff0ee;border:1px solid #ffd4ce;padding:12px;border-radius:12px;margin-top:12px;display:none}
+footer{color:#648077;font-size:.82rem;text-align:center;padding:18px}a{color:inherit}
+@media(max-width:680px){.hero{grid-template-columns:1fr}.forecast{grid-template-columns:repeat(2,minmax(0,1fr))}.temp{font-size:3.5rem}header{padding:20px 16px}.forecast .day:last-child{grid-column:span 2}}
+</style>
+</head>
+<body>
+<header><div><div class="brand">🌦 Bihar Weather Live</div><div class="sub">Live conditions · 7-day outlook · Weather advisories</div></div><div id="status" aria-live="polite">Connecting to weather service…</div></header>
+<main>
+<div class="controls">
+<select id="district" aria-label="Choose Bihar district"></select>
+<button class="primary" id="refresh">↻ Refresh weather</button>
+<button id="locate">◎ Use my location</button>
+</div>
+<section class="hero">
+<div class="panel">
+<div class="muted">CURRENT CONDITIONS</div>
+<div class="place" id="place">Loading district…</div>
+<div class="temp" id="temp">--°</div><div class="condition" id="condition">Fetching forecast…</div>
+<div class="updated" id="updated">Weather data provided by Open-Meteo</div>
+<div class="error" id="error" role="alert"></div>
+</div>
+<div class="panel"><div class="muted">AT A GLANCE</div><div class="metrics">
+<div class="metric"><span>Feels like</span><b id="feels">--°C</b></div>
+<div class="metric"><span>Humidity</span><b id="humidity">--%</b></div>
+<div class="metric"><span>Wind</span><b id="wind">-- km/h</b></div>
+<div class="metric"><span>Rain today</span><b id="rain">-- mm</b></div>
+<div class="metric"><span>UV index</span><b id="uv">--</b></div>
+<div class="metric"><span>Sunrise</span><b id="sunrise">--:--</b></div>
+</div></div>
+</section>
+<div class="section-title">7-day forecast</div><section id="forecast" class="forecast"><div class="panel">Loading forecast…</div></section>
+<div class="section-title">Weather alerts</div><section id="alerts"><div class="alert info">Checking forecast for heavy rain, high temperatures and strong winds…</div></section>
+<footer>Forecast source: Open-Meteo. Forecasts are estimates, not official emergency warnings. For urgent local alerts, follow IMD and Bihar disaster-management advisories.</footer>
+</main>
+<script>
+const districts = {
+"Araria":[26.15,87.52],"Arwal":[25.25,84.69],"Aurangabad":[24.75,84.37],"Banka":[24.88,86.92],"Begusarai":[25.42,86.13],"Bhagalpur":[25.25,87.00],"Bhojpur":[25.56,84.66],"Buxar":[25.56,83.98],"Darbhanga":[26.15,85.90],"East Champaran (Motihari)":[26.65,84.92],"Gaya":[24.80,85.00],"Gopalganj":[26.47,84.44],"Jamui":[24.93,86.22],"Jehanabad":[25.21,84.99],"Kaimur (Bhabua)":[25.04,83.61],"Katihar":[25.54,87.57],"Khagaria":[25.50,86.48],"Kishanganj":[26.10,87.95],"Lakhisarai":[25.17,86.09],"Madhepura":[25.92,86.79],"Madhubani":[26.35,86.07],"Munger":[25.37,86.47],"Muzaffarpur":[26.12,85.39],"Nalanda":[25.14,85.45],"Nawada":[24.88,85.54],"Patna":[25.61,85.14],"Purnia":[25.78,87.47],"Rohtas":[24.95,84.03],"Saharsa":[25.88,86.60],"Samastipur":[25.86,85.78],"Saran (Chapra)":[25.78,84.75],"Sheikhpura":[25.13,85.85],"Sheohar":[26.51,85.29],"Sitamarhi":[26.59,85.49],"Siwan":[26.22,84.36],"Supaul":[26.12,86.60],"Vaishali (Hajipur)":[25.69,85.21],"West Champaran (Bettiah)":[27.00,84.50]
+};
+const $ = id => document.getElementById(id);
+const select = $("district");
+Object.keys(districts).sort().forEach(d=>{let o=document.createElement("option");o.value=d;o.textContent=d;select.append(o)});
+select.value="Samastipur";
+const weatherCodes = {0:["Clear sky","☀️"],1:["Mainly clear","🌤️"],2:["Partly cloudy","⛅"],3:["Overcast","☁️"],45:["Fog","🌫️"],48:["Rime fog","🌫️"],51:["Light drizzle","🌦️"],53:["Drizzle","🌦️"],55:["Heavy drizzle","🌧️"],56:["Freezing drizzle","🌧️"],57:["Heavy freezing drizzle","🌧️"],61:["Light rain","🌦️"],63:["Rain","🌧️"],65:["Heavy rain","🌧️"],66:["Freezing rain","🌧️"],67:["Heavy freezing rain","🌧️"],71:["Light snow","🌨️"],73:["Snow","🌨️"],75:["Heavy snow","🌨️"],77:["Snow grains","🌨️"],80:["Rain showers","🌦️"],81:["Showers","🌧️"],82:["Violent rain showers","⛈️"],85:["Snow showers","🌨️"],86:["Heavy snow showers","🌨️"],95:["Thunderstorm","⛈️"],96:["Thunderstorm with hail","⛈️"],99:["Severe thunderstorm with hail","⛈️"]};
+function wx(code){return weatherCodes[code]||["Conditions unavailable","🌡️"]}
+function timeShort(s){return s?s.slice(11,16):"--:--"}
+function dateLabel(s,i){if(i===0)return "Today";return new Date(s+"T12:00:00").toLocaleDateString("en-IN",{weekday:"short"})}
+function alertItem(text,kind=""){const div=document.createElement("div");div.className="alert "+kind;div.textContent=text;return div}
+async function load(latOverride=null,lonOverride=null,nameOverride=null){
+ const district=select.value, coords=districts[district];const lat=latOverride??coords[0],lon=lonOverride??coords[1],name=nameOverride??district;
+ $("status").textContent="Updating…";$("error").style.display="none";$("place").textContent=name;
+ try{
+ const url=`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,rain,showers,weather_code,wind_speed_10m,wind_gusts_10m&hourly=relative_humidity_2m,precipitation_probability,uv_index&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,wind_speed_10m_max,uv_index_max,sunrise,sunset&timezone=Asia%2FKolkata&forecast_days=7`;
+ const res=await fetch(url);if(!res.ok)throw new Error("Weather service returned "+res.status);const data=await res.json();const c=data.current,d=data.daily;
+ $("temp").textContent=Math.round(c.temperature_2m)+"°C";$("condition").textContent=wx(c.weather_code)[0];$("feels").textContent=Math.round(c.apparent_temperature)+"°C";$("humidity").textContent=c.relative_humidity_2m+"%";$("wind").textContent=Math.round(c.wind_speed_10m)+" km/h";$("rain").textContent=(d.precipitation_sum[0]??0)+" mm";$("uv").textContent=d.uv_index_max[0]??"--";$("sunrise").textContent=timeShort(d.sunrise[0]);$("updated").textContent="Updated "+timeShort(c.time)+" IST · Open-Meteo";
+ const f=$("forecast");f.replaceChildren();
+ d.time.forEach((day,i)=>{const card=document.createElement("div");card.className="day";const [desc,icon]=wx(d.weather_code[i]);card.innerHTML=`<b>${dateLabel(day,i)}</b><div class="icon">${icon}</div><small>${desc}</small><p><b>${Math.round(d.temperature_2m_max[i])}°</b> / ${Math.round(d.temperature_2m_min[i])}°</p><small>Rain ${d.precipitation_probability_max[i]??0}%</small>`;f.append(card)});
+ const a=$("alerts");a.replaceChildren();let count=0;
+ d.time.forEach((day,i)=>{const code=d.weather_code[i],rain=d.precipitation_sum[i]||0,prob=d.precipitation_probability_max[i]||0,hi=d.temperature_2m_max[i],wind=d.wind_speed_10m_max[i]||0,uv=d.uv_index_max[i]||0,label=dateLabel(day,i);
+ if([95,96,99,82].includes(code)){a.append(alertItem(`${label}: Thunderstorm or intense showers indicated (${wx(code)[0]}). Monitor official IMD warnings.`));count++}
+ else if(rain>=30||prob>=80){a.append(alertItem(`${label}: Rain watch — forecast ${rain} mm precipitation, ${prob}% chance. Check official advisories.`));count++}
+ if(hi>=40){a.append(alertItem(`${label}: High-temperature watch — maximum around ${Math.round(hi)}°C. Hydrate and avoid prolonged midday exposure.`));count++}
+ if(wind>=40){a.append(alertItem(`${label}: Strong wind watch — forecast gusts/wind indicator ${Math.round(wind)} km/h. Secure loose objects.`));count++}
+ if(uv>=8){a.append(alertItem(`${label}: Very high UV index (${Math.round(uv)}). Seek shade and use sun protection.`,"info"));count++}
+ });
+ if(!count)a.append(alertItem("No threshold-based weather alerts detected in this forecast. This does not mean there is no official warning.","info"));
+ $("status").textContent="Live data loaded";
+ }catch(e){$("status").textContent="Offline / error";$("error").style.display="block";$("error").textContent="Could not load live weather. Check your internet connection and tap Refresh. Details: "+e.message;$("condition").textContent="Forecast unavailable";}
+}
+$("refresh").addEventListener("click",()=>load());select.addEventListener("change",()=>load());
+$("locate").addEventListener("click",()=>{if(!navigator.geolocation){alert("Location is not supported by this browser.");return}navigator.geolocation.getCurrentPosition(p=>load(p.coords.latitude,p.coords.longitude,"Your location"),()=>alert("Location permission was denied. Choose a Bihar district instead."),{timeout:10000})});
+if("serviceWorker" in navigator && location.protocol.startsWith("http"))navigator.serviceWorker.register("./sw.js").catch(()=>{});
+load();
+</script>
+</body></html>

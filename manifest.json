@@ -1,0 +1,9 @@
+{
+  "name": "Bihar Weather Live",
+  "short_name": "Bihar Weather",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#edf5f1",
+  "theme_color": "#075e4d",
+  "description": "Live weather and 7-day forecasts for Bihar districts"
+}
